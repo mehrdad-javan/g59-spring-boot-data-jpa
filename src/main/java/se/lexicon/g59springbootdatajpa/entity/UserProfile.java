@@ -10,7 +10,6 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
-@Builder
 
 @Entity
 //@Table(name = "tbl_user_profile")

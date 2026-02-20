@@ -12,7 +12,6 @@ import java.time.Instant;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode
-@Builder
 
 @Entity
 @Table(name = "users")

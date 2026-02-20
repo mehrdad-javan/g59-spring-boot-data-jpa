@@ -1,3 +1,5 @@
+![Lexicon Logo](https://lexicongruppen.se/media/wi5hphtd/lexicon-logo.svg)
+
 # Spring Boot & Spring Data JPA
 
 ## Table of Contents
@@ -207,7 +209,7 @@ Add the MySQL driver dependency:
 ```
 Add database settings in application.properties:
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/school_db
+spring.datasource.url=jdbc:mysql://localhost:3306/event_db
 spring.datasource.username=root
 spring.datasource.password=1234
 
@@ -253,19 +255,19 @@ You do **not** need to write any configuration classes.
 
 ```mermaid
 classDiagram
-  class Student {
+  class User {
     +Long id
     +String firstName
     +String email
   }
 
-  class students_table {
+  class users_table {
     id : BIGINT (PK)
     first_name : VARCHAR
     email : VARCHAR
   }
 
-  Student --> students_table : ORM Mapping
+  User --> users_table : ORM Mapping
 ```
 
 ### 2.2 Introduction to JPA
@@ -302,8 +304,8 @@ In JPA, an **Entity** is a lightweight domain object that represents a row in a 
 **Example:**
 ```java
 @Entity
-@Table(name = "students")
-public class Student {
+@Table(name = "users")
+public class User {
     @Id
     private Long id;
     
@@ -334,7 +336,7 @@ private Long id;
 
 An entity can be in one of four states during its life:
 
-1.  **New (Transient)**: The object is created (`new Student()`) but not yet associated with a database row or a JPA Session.
+1.  **New (Transient)**: The object is created (`new User()`) but not yet associated with a database row or a JPA Session.
 2.  **Managed (Persistent)**: The object is associated with a JPA session. Changes to the object will be automatically saved to the database.
 3.  **Detached**: The object exists in the database, but the JPA session is closed. Changes won't be tracked.
 4.  **Removed**: The object is marked for deletion from the database.
@@ -374,11 +376,11 @@ To create a repository, you just need to define an interface that extends `JpaRe
 
 **Example:**
 ```java
-public interface StudentRepository extends JpaRepository<Student, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
     // No code needed! Basic CRUD methods are already included.
 }
 ```
-- `Student`: The entity type.
+- `User`: The entity type.
 - `Long`: The type of the Primary Key (`@Id`).
 
 ### 3.5 Derived Query Methods
@@ -388,16 +390,16 @@ One of the coolest features! You can define query methods simply by naming them 
 **Examples:**
 ```java
 // findBy + PropertyName
-List<Student> findByFirstName(String name);
+List<User> findByFirstName(String name);
 
 // findBy + PropertyName + Keyword + PropertyName
-List<Student> findByFirstNameAndEmail(String name, String email);
+List<User> findByFirstNameAndEmail(String name, String email);
 
 // findBy + PropertyName + Comparison
-List<Student> findByAgeGreaterThan(int age);
+List<User> findByAgeGreaterThan(int age);
 
 // findBy + PropertyName + Containing (Like)
-List<Student> findByEmailContaining(String keyword);
+List<User> findByEmailContaining(String keyword);
 ```
 
 ### 3.6 Custom JPQL Queries
@@ -406,8 +408,8 @@ If a query is too complex for a method name, you can use the `@Query` annotation
 
 **Example:**
 ```java
-@Query("SELECT s FROM Student s WHERE s.email LIKE %:suffix")
-List<Student> findStudentsWithEmailEndingWith(@Param("suffix") String suffix);
+@Query("SELECT u FROM User u WHERE u.email LIKE %:suffix")
+List<User> findUsersWithEmailEndingWith(@Param("suffix") String suffix);
 ```
 
 ### 3.7 Native Queries
@@ -416,8 +418,8 @@ Sometimes you need to use features specific to a certain database (like MySQL or
 
 **Example:**
 ```java
-@Query(value = "SELECT * FROM students WHERE created_at > NOW() - INTERVAL 1 DAY", nativeQuery = true)
-List<Student> findNewStudentsNative();
+@Query(value = "SELECT * FROM users WHERE created_at > NOW() - INTERVAL 1 DAY", nativeQuery = true)
+List<User> findNewUsersNative();
 ```
 
 ### 3.8 Paging & Sorting
@@ -426,41 +428,41 @@ Spring Data JPA makes it very easy to handle large amounts of data using the `Pa
 
 **Sorting Example:**
 ```java
-List<Student> students = repository.findAll(Sort.by("firstName").ascending());
+List<User> users = repository.findAll(Sort.by("firstName").ascending());
 ```
 
 **Paging Example:**
 ```java
 Pageable pageable = PageRequest.of(0, 10, Sort.by("email"));
-Page<Student> studentPage = repository.findAll(pageable);
+Page<User> userPage = repository.findAll(pageable);
 
-List<Student> content = studentPage.getContent(); // The actual data
-long totalElements = studentPage.getTotalElements(); // Total rows in DB
+List<User> content = userPage.getContent(); // The actual data
+long totalElements = userPage.getTotalElements(); // Total rows in DB
 ```
 
 ---
 
 ## 4 – Entity Relationships
 
-In the real world, data is related. A student has an address, a course has many students, and an instructor teaches several courses. JPA allows us to map these relationships using annotations.
+In the real world, data is related. A user has a profile, an event has many participants (users), and a user can participate in multiple events. JPA allows us to map these relationships using annotations.
 
 ### 4.1 One-to-One Mapping
 
 Used when one entity is associated with exactly one other entity.
 
-- **Example:** A `Student` has one `Address`.
+- **Example:** A `User` has one `UserProfile`.
 - **Annotation:** `@OneToOne`
 
 ```java
 @Entity
-public class Student {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "address_id", referencedColumnName = "id")
-    private Address address;
+    @JoinColumn(name = "user_profile_id", referencedColumnName = "id")
+    private UserProfile userProfile;
 }
 ```
 
@@ -476,15 +478,15 @@ Used when one entity is associated with multiple instances of another entity.
 
 The most common relationship. Multiple instances of an entity are associated with one instance of another entity.
 
-- **Example:** Many `Students` belong to one `Classroom`.
+- **Example:** Many `Events` belong to one `Organizer` (User).
 - **Annotation:** `@ManyToOne`
 
 ```java
 @Entity
-public class Student {
+public class Event {
     @ManyToOne
-    @JoinColumn(name = "classroom_id")
-    private Classroom classroom;
+    @JoinColumn(name = "organizer_id")
+    private User organizer;
 }
 ```
 
@@ -492,19 +494,19 @@ public class Student {
 
 Used when multiple instances of an entity are associated with multiple instances of another entity. This requires a **Join Table**.
 
-- **Example:** Many `Students` enroll in many `Courses`.
+- **Example:** Many `Users` participate in many `Events`.
 - **Annotation:** `@ManyToMany`
 
 ```java
 @Entity
-public class Student {
+public class Event {
     @ManyToMany
     @JoinTable(
-        name = "student_courses",
-        joinColumns = @JoinColumn(name = "student_id"),
-        inverseJoinColumns = @JoinColumn(name = "course_id")
+        name = "event_participants",
+        joinColumns = @JoinColumn(name = "event_id"),
+        inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    private Set<Course> courses;
+    private Set<User> participants;
 }
 ```
 
@@ -514,7 +516,7 @@ This defines **when** the related data should be loaded from the database.
 
 1.  **EAGER**: The related data is loaded immediately along with the main entity.
     - Default for: `@OneToOne`, `@ManyToOne`.
-2.  **LAZY**: The related data is loaded only when you actually call the getter method (e.g., `student.getAddress()`).
+2.  **LAZY**: The related data is loaded only when you actually call the getter method (e.g., `user.getUserProfile()`).
     - Default for: `@OneToMany`, `@ManyToMany`.
     - **Recommendation:** Use LAZY as much as possible to improve performance.
 
@@ -546,12 +548,12 @@ A **Transaction** is a unit of work that should either succeed completely or fai
 
 ```java
 @Service
-public class StudentService {
+public class EventService {
     @Transactional
-    public void enrollStudent(Student student, Course course) {
+    public void addParticipant(Event event, User user) {
         // If any step fails, everything is rolled back
-        studentRepository.save(student);
-        courseRepository.addStudent(course, student);
+        eventRepository.save(event);
+        userRepository.save(user);
     }
 }
 ```
@@ -563,13 +565,13 @@ Sometimes you don't need all the columns of an entity. **Projections** allow you
 - **Interface-based Projection:** Define an interface with getter methods.
 
 ```java
-public interface StudentNameView {
+public interface UserNameView {
     String getFirstName();
     String getLastName();
 }
 
 // In Repository
-List<StudentNameView> findByEmail(String email);
+List<UserNameView> findByEmail(String email);
 ```
 
 ### 5.3 DTO Mapping
@@ -584,10 +586,10 @@ List<StudentNameView> findByEmail(String email);
 - **How to map?** You can map manually, use a library like ModelMapper/MapStruct, or use Java **Records**.
 
 ```java
-public record StudentDTO(String name, String email) {}
+public record UserDTO(String name, String email) {}
 
 // Manual Mapping
-StudentDTO dto = new StudentDTO(student.getName(), student.getEmail());
+UserDTO dto = new UserDTO(user.getName(), user.getEmail());
 ```
 
 ### 5.4 Auditing
@@ -644,16 +646,16 @@ Spring Boot provides `@DataJpaTest` for testing the persistence layer.
 
 ```java
 @DataJpaTest
-class StudentRepositoryTest {
+class UserRepositoryTest {
     @Autowired
-    private StudentRepository repository;
+    private UserRepository repository;
 
     @Test
     void testSaveAndFind() {
-        Student student = new Student("John", "john@example.com");
-        repository.save(student);
+        User user = new User("User1", "user1@example.com");
+        repository.save(user);
         
-        Optional<Student> found = repository.findByEmail("john@example.com");
+        Optional<User> found = repository.findByEmail("user1@example.com");
         assertTrue(found.isPresent());
     }
 }
