@@ -12,7 +12,7 @@ import lombok.*;
 @EqualsAndHashCode
 
 @Entity
-//@Table(name = "tbl_user_profile")
+@Table(name = "user_profiles")
 public class UserProfile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

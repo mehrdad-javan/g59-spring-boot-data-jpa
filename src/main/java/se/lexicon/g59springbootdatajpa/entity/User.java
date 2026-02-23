@@ -35,5 +35,7 @@ public class User {
         createDate = Instant.now();
     }
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private UserProfile userProfile;
 
 }
