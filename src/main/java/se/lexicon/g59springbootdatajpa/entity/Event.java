@@ -12,8 +12,8 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = "createdBy")
-@EqualsAndHashCode(exclude = "createdBy")
+@ToString(exclude = {"createdBy", "participants"})
+@EqualsAndHashCode(exclude = {"createdBy", "participants"})
 
 @Entity
 @Table(name = "events")
@@ -27,6 +27,9 @@ public class Event {
     @Column(nullable = false)
     @Setter
     private String title;
+
+    @Setter
+    private String description;
 
     @Column(nullable = false)
     @Setter
