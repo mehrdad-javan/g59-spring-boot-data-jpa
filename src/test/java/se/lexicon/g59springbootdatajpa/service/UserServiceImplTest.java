@@ -1,5 +1,30 @@
 package se.lexicon.g59springbootdatajpa.service;
 
+/**
+ * UNIT TEST (Mocking Strategy)
+ * ----------------------------
+ * This class tests the 'UserServiceImpl' in total isolation.
+ * <p>
+ * WHAT IS MOCKING?
+ * Mocking is a technique where real dependencies (like UserRepository) are replaced
+ * with "fake" objects (Mocks). This allows us to:
+ * 1. Test ONLY the business logic of the service.
+ * 2. Simulate different scenarios (success, errors, exceptions) without a database.
+ * 3. Make the tests extremely fast (no Spring context or database required).
+ * <p>
+ * KEY ANNOTATIONS:
+ * - @ExtendWith(MockitoExtension.class): Initializes Mockito.
+ * - @Mock: Creates a "fake" version of a dependency.
+ * - @InjectMocks: Creates the actual Service and "plugs in" the mocks.
+ * <p>
+ * KEY MOCKITO METHODS:
+ * - when(...).thenReturn(...): Tells a mock how to behave ("When this method is called, return this value").
+ * - verify(...): Checks if a specific method on a mock was actually called.
+ * - times(n): Used with verify to check EXACTLY how many times a method was called.
+ * - never(): Used with verify to ensure a method was NOT called.
+ * - any(), anyString(), anyLong(): Matchers used when we don't care about the exact argument value.
+ */
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,7 +75,7 @@ class UserServiceImplTest {
         user.setEmail("test@example.com");
         user.setFullName("Test User");
         // createDate is usually set by @PrePersist, but for mocking we might need it
-        
+
         userResponseDTO = new UserResponseDTO(1L, "test@example.com", "Test User", Instant.now());
     }
 
@@ -92,7 +117,7 @@ class UserServiceImplTest {
         assertThatThrownBy(() -> userService.register(userRequestDTO))
                 .isInstanceOf(DuplicateEntryException.class)
                 .hasMessageContaining("User with email already exists");
-        
+
         verify(userRepository, never()).save(any(User.class));
     }
 
