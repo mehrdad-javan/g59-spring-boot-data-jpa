@@ -28,7 +28,7 @@ public class EntityToDtoMapper {
         if (userRequestDTO == null) throw new IllegalArgumentException("User Request cannot be null");
         User user = new User();
         user.setEmail(userRequestDTO.email());
-        user.setFullName(user.getFullName());
+        user.setFullName(userRequestDTO.fullName());
         return user;
     }
 
