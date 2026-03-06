@@ -9,9 +9,12 @@ public enum EventStatus {
 
 
     public static EventStatus fromString(String status) {
-        if (status == null || status.isEmpty()) {
+        if (status == null || status.trim().isEmpty()) {
             return PLANNED;
-        } else {
+        }
+        try {
+            return EventStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid status: " + status + ". Valid statuses are: PLANNED, ONGOING, CANCELLED, COMPLETED");
         }
     }

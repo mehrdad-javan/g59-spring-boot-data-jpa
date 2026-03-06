@@ -38,6 +38,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
+    public UserResponseDTO update(Long id, UserRequestDTO userRequestDto) {
+        if (userRequestDto == null) throw new IllegalArgumentException("User Request cannot be null");
+
+        User user;
+        if (id != null) {
+            user = userRepository.findById(id).orElseGet(() -> mapper.toUserEntity(userRequestDto));
+        } else {
+            user = mapper.toUserEntity(userRequestDto);
+        }
+
+        if (!userRequestDto.email().equals(user.getEmail()) && userRepository.existsByEmail(userRequestDto.email())) {
+            throw new DuplicateEntryException("User with email already exists");
+        }
+
+        user.setEmail(userRequestDto.email());
+        user.setFullName(userRequestDto.fullName());
+
+        User updatedUser = userRepository.save(user);
+        return mapper.toUserResponseDTO(updatedUser);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<UserResponseDTO> findById(Long id) {
         return userRepository.findById(id).map(mapper::toUserResponseDTO);

@@ -13,31 +13,32 @@ import se.lexicon.g59springbootdatajpa.repository.EventRepository;
 import se.lexicon.g59springbootdatajpa.repository.UserRepository;
 import se.lexicon.g59springbootdatajpa.service.EventService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class EventServiceImpl implements EventService {
 
-    private final UserRepository userRepository;
     private final EventRepository eventRepository;
+    private final UserRepository userRepository;
     private final EntityToDtoMapper mapper;
 
-    public EventServiceImpl(UserRepository userRepository, EventRepository eventRepository, EntityToDtoMapper mapper) {
-        this.userRepository = userRepository;
+    public EventServiceImpl(EventRepository eventRepository, UserRepository userRepository, EntityToDtoMapper mapper) {
         this.eventRepository = eventRepository;
+        this.userRepository = userRepository;
         this.mapper = mapper;
     }
 
     @Override
     @Transactional
-    public EventResponseDTO create(EventRequestDTO eventRequestDTO) {
-        if (eventRequestDTO == null) throw new IllegalArgumentException("EventRequestDTO cannot be null");
-        User userCreator = userRepository.findById(eventRequestDTO.createdByUserId())
-                .orElseThrow(() -> new DataNotFoundException("Creator user not found with ID: " + eventRequestDTO.createdByUserId()));
+    public EventResponseDTO create(EventRequestDTO eventRequestDto) {
+        if (eventRequestDto == null) throw new IllegalArgumentException("Event request cannot be null.");
+        User creator = userRepository.findById(eventRequestDto.createdByUserId())
+                .orElseThrow(() -> new DataNotFoundException("Creator user not found with ID: " + eventRequestDto.createdByUserId()));
 
-        Event event = mapper.toEventEntity(eventRequestDTO);
-        event.setCreatedBy(userCreator);
+        Event event = mapper.toEventEntity(eventRequestDto);
+        event.setCreatedBy(creator);
 
         Event savedEvent = eventRepository.save(event);
         return mapper.toEventResponseDTO(savedEvent);
@@ -52,49 +53,98 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public List<EventResponseDTO> findAll() {
-        List<Event> events = eventRepository.findAll();
-        return events.stream().map(mapper::toEventResponseDTO).toList();
+        return eventRepository.findAll().stream().map(mapper::toEventResponseDTO).toList();
     }
 
     @Override
     @Transactional
-    public void addParticipant(Long eventId, Long participantId) {
-        if (eventId == null || participantId == null)
-            throw new IllegalArgumentException("Event ID or Participant ID cannot be null");
+    public EventResponseDTO update(Long id, EventRequestDTO eventRequestDto) {
+        if (eventRequestDto == null) throw new IllegalArgumentException("Event request cannot be null.");
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new DataNotFoundException("Event not found with ID: " + eventId));
+        Event event;
+        if (id != null) {
+            event = eventRepository.findById(id).orElseGet(() -> mapper.toEventEntity(eventRequestDto));
+        } else {
+            event = mapper.toEventEntity(eventRequestDto);
+        }
 
-        User participant = userRepository.findById(participantId)
-                .orElseThrow(() -> new DataNotFoundException("Participant not found with ID: " + participantId));
+        User creator = userRepository.findById(eventRequestDto.createdByUserId())
+                .orElseThrow(() -> new DataNotFoundException("Creator user not found with ID: " + eventRequestDto.createdByUserId()));
 
-        event.addParticipant(participant);
-        eventRepository.save(event);
+        event.setTitle(eventRequestDto.title());
+        event.setDescription(eventRequestDto.description());
+        event.setDateTime(eventRequestDto.dateTime());
+        event.setLocation(eventRequestDto.location());
+        event.setStatus(EventStatus.fromString(eventRequestDto.status()));
+        event.setCreatedBy(creator);
+
+        Event savedEvent = eventRepository.save(event);
+        return mapper.toEventResponseDTO(savedEvent);
     }
 
     @Override
     @Transactional
-    public void removeParticipant(Long eventId, Long participantId) {
-        if (eventId == null || participantId == null)
-            throw new IllegalArgumentException("Event ID or Participant ID cannot be null");
-
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new DataNotFoundException("Event not found with ID: " + eventId));
-
-        User participant = userRepository.findById(participantId)
-                .orElseThrow(() -> new DataNotFoundException("Participant not found with ID: " + participantId));
-
-        event.removeParticipant(participant);
-        eventRepository.save(event);
+    public void deleteById(Long id) {
+        if (id == null) throw new IllegalArgumentException("Event ID cannot be null.");
+        if (!eventRepository.existsById(id)) {
+            throw new DataNotFoundException("Event not found with ID: " + id);
+        }
+        eventRepository.deleteById(id);
     }
 
-    public List<EventResponseDTO> findByStatus(String status) {
-
-        if (status == null) throw new IllegalArgumentException("Status cannot be null");
-
-        return eventRepository.findByStatus(EventStatus.fromString(status))
-                .stream()
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventResponseDTO> findByTitle(String title) {
+        return eventRepository.findByTitleContaining(title).stream()
                 .map(mapper::toEventResponseDTO)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventResponseDTO> findByDateRange(LocalDateTime start, LocalDateTime end) {
+        return eventRepository.findByDateTimeBetween(start, end).stream()
+                .map(mapper::toEventResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventResponseDTO> findByLocation(String location) {
+        return eventRepository.findByLocation(location).stream()
+                .map(mapper::toEventResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EventResponseDTO> findByStatus(String status) {
+        return eventRepository.findByStatus(EventStatus.fromString(status)).stream()
+                .map(mapper::toEventResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void addParticipant(Long eventId, Long userId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new DataNotFoundException("Event not found with ID: " + eventId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DataNotFoundException("User not found with ID: " + userId));
+
+        event.addParticipant(user);
+        eventRepository.save(event);
+    }
+
+    @Override
+    @Transactional
+    public void removeParticipant(Long eventId, Long userId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new DataNotFoundException("Event not found with ID: " + eventId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new DataNotFoundException("User not found with ID: " + userId));
+
+        event.removeParticipant(user);
+        eventRepository.save(event);
     }
 }
