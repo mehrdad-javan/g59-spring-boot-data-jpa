@@ -12,7 +12,7 @@ public interface UserService {
 
     UserResponseDTO update(Long id, UserRequestDTO userRequestDto);
 
-    Optional<UserResponseDTO> findById(Long id);
+    UserResponseDTO findById(Long id);
 
     List<UserResponseDTO> findAll();
 

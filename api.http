@@ -1,0 +1,15 @@
+### GET USERS
+# @name get all users
+GET http://localhost:8080/api/v1/users
+Accept: application/json
+
+### CREATE a USER
+# @name create a new  user
+POST http://localhost:8080/api/v1/users
+Accept: application/json
+Content-Type: application/json
+
+{
+  "email": "test@test.test",
+  "fullName": "Test Name"
+}
