@@ -1,5 +1,6 @@
 package se.lexicon.g59springbootdatajpa.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,5 +70,10 @@ public class UserController {
                 .body(userService.findAll());
     }
 
-
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete a user by ID")
+    public ResponseEntity<Void> deleteById(@PathVariable @Positive Long id) {
+        userService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 }
