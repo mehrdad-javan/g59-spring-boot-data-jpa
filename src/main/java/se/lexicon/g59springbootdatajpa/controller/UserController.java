@@ -1,7 +1,6 @@
 package se.lexicon.g59springbootdatajpa.controller;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -56,20 +55,15 @@ public class UserController {
 
     // GET - http:localhost:8080/api/v1/users/1
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> findById(@PathVariable @Positive(message = "id must be a positive number.") Long id) {
-        System.out.println("id = " + id);
-        UserResponseDTO response = userService.findById(id);
-        System.out.println("response = " + response);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(response);
-
+    public ResponseEntity<UserResponseDTO> findById(@PathVariable @Positive Long id) {
+        return userService.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     // GET - http:localhost:8080/api/v1/users
     @GetMapping
-    public ResponseEntity<List<UserResponseDTO>> findAll(){
+    public ResponseEntity<List<UserResponseDTO>> findAll() {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(userService.findAll());

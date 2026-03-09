@@ -62,9 +62,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserResponseDTO findById(Long id) {
-        return userRepository.findById(id).map(mapper::toUserResponseDTO)
-                .orElseThrow(() -> new DataNotFoundException("User not found with ID: " + id));
+    public Optional<UserResponseDTO> findById(Long id) {
+        return userRepository.findById(id).map(mapper::toUserResponseDTO);
     }
 
     @Override
