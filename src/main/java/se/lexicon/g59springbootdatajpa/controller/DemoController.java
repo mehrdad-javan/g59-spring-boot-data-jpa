@@ -1,5 +1,7 @@
 package se.lexicon.g59springbootdatajpa.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.Map;
 @RestController
 // this class handels http requests and returns responses
 @RequestMapping("/api/v1/demo")
+@Tag(name = "Demo API", description = "Demo API")
 public class DemoController {
 
     @GetMapping()
@@ -22,6 +25,7 @@ public class DemoController {
     // add more get operations here as needed
 
 
+    @Operation(summary = "Demo for creating a user", description = "This endpoint is used to create a new user.")
     @PostMapping()
     public ResponseEntity<Map<String, Object>> create(@RequestBody Map<String, Object> requestBody) {
         System.out.println("### create method called ###");

@@ -1,9 +1,12 @@
 package se.lexicon.g59springbootdatajpa.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import se.lexicon.g59springbootdatajpa.dto.request.UserRequestDTO;
 import se.lexicon.g59springbootdatajpa.dto.response.UserResponseDTO;
@@ -14,6 +17,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/users")
 // http:localhost:8080/api/v1/users
+
+@Validated
 public class UserController {
 
     private final UserService userService;
@@ -51,7 +56,7 @@ public class UserController {
 
     // GET - http:localhost:8080/api/v1/users/1
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id) {
+    public ResponseEntity<UserResponseDTO> findById(@PathVariable @Positive(message = "id must be a positive number.") Long id) {
         System.out.println("id = " + id);
         UserResponseDTO response = userService.findById(id);
         System.out.println("response = " + response);
